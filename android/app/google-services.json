@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "111761112037",
+    "project_id": "runcast-67",
+    "storage_bucket": "runcast-67.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:111761112037:android:4a93ae6c895dfcef010d0c",
+        "android_client_info": {
+          "package_name": "com.example.runcast"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-v0K-idYlshmN0wnAffMA-ASMed0cAos"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
