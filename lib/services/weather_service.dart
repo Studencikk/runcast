@@ -7,13 +7,25 @@ class HourlyWeather {
   final double temperature;
   final double windSpeed;
   final int precipitationProbability;
+  final double precipitation;
 
   HourlyWeather({
     required this.hour,
     required this.temperature,
     required this.windSpeed,
     required this.precipitationProbability,
+    required this.precipitation,
   });
+
+  bool get isRaining => precipitation >= 0.5;
+
+  // Poziom opadów
+  String get rainLabel {
+    if (precipitation < 0.5) return 'Brak';
+    if (precipitation < 2.0) return 'Mżawka';
+    if (precipitation < 5.0) return 'Lekki';
+    return 'Silny';
+  }
 }
 
 class AirQuality {
@@ -36,9 +48,17 @@ class WeatherData {
   WeatherData({required this.hourly, required this.airQuality});
 
   List<HourlyWeather> getWindowHours(int startHour, int endHour) {
-    return hourly
-        .where((h) => h.hour >= startHour && h.hour < endHour)
-        .toList();
+    return hourly.where((h) => h.hour >= startHour && h.hour < endHour).toList();
+  }
+
+  // Aktualna godzina
+  HourlyWeather? getCurrentHour() {
+    final now = DateTime.now().hour;
+    try {
+      return hourly.firstWhere((h) => h.hour == now);
+    } catch (_) {
+      return hourly.isNotEmpty ? hourly.first : null;
+    }
   }
 
   int calculateComfort(int startHour, int endHour) {
@@ -49,7 +69,8 @@ class WeatherData {
 
     final avgTemp = hours.map((h) => h.temperature).reduce((a, b) => a + b) / hours.length;
     final avgWind = hours.map((h) => h.windSpeed).reduce((a, b) => a + b) / hours.length;
-    final avgRain = hours.map((h) => h.precipitationProbability).reduce((a, b) => a + b) / hours.length;
+    final avgPrecip = hours.map((h) => h.precipitation).reduce((a, b) => a + b) / hours.length;
+    final rainyHours = hours.where((h) => h.isRaining).length;
 
     // Temperatura
     if (avgTemp > 28) score -= 30;
@@ -62,10 +83,12 @@ class WeatherData {
     else if (avgWind >= 20) score -= 20;
     else if (avgWind >= 10) score -= 5;
 
-    // Deszcz
-    if (avgRain >= 70) score -= 30;
-    else if (avgRain >= 40) score -= 15;
-    else if (avgRain >= 20) score -= 5;
+    // Opady
+    if (avgPrecip >= 5.0) score -= 35;
+    else if (avgPrecip >= 2.0) score -= 20;
+    else if (avgPrecip >= 0.5) score -= 10;
+    // Liczba deszczowych godzin
+    if (rainyHours >= 3) score -= 10;
 
     // Smog
     if (airQuality.pm25 > 35) score -= 15;
@@ -90,15 +113,15 @@ class WeatherService {
     try {
       final weatherUrl = Uri.parse(
         'https://api.open-meteo.com/v1/forecast'
-        '?latitude=$_lat&longitude=$_lon'
-        '&hourly=temperature_2m,wind_speed_10m,precipitation_probability'
-        '&forecast_days=1',
+            '?latitude=$_lat&longitude=$_lon'
+            '&hourly=temperature_2m,wind_speed_10m,precipitation_probability,precipitation'
+            '&forecast_days=1',
       );
 
       final airUrl = Uri.parse(
         'https://air-quality-api.open-meteo.com/v1/air-quality'
-        '?latitude=$_lat&longitude=$_lon'
-        '&hourly=pm10,pm2_5',
+            '?latitude=$_lat&longitude=$_lon'
+            '&hourly=pm10,pm2_5',
       );
 
       final responses = await Future.wait([
@@ -117,6 +140,7 @@ class WeatherService {
       final temps = weatherJson['hourly']['temperature_2m'] as List;
       final winds = weatherJson['hourly']['wind_speed_10m'] as List;
       final rains = weatherJson['hourly']['precipitation_probability'] as List;
+      final precips = weatherJson['hourly']['precipitation'] as List;
 
       final List<HourlyWeather> hourlyList = [];
       for (int i = 0; i < times.length; i++) {
@@ -127,6 +151,7 @@ class WeatherService {
           temperature: (temps[i] as num).toDouble(),
           windSpeed: (winds[i] as num).toDouble(),
           precipitationProbability: (rains[i] as num).toInt(),
+          precipitation: (precips[i] as num?)?.toDouble() ?? 0.0,
         ));
       }
 
@@ -136,12 +161,8 @@ class WeatherService {
       final validPm25 = pm25Values.whereType<num>().toList();
       final validPm10 = pm10Values.whereType<num>().toList();
 
-      final avgPm25 = validPm25.isEmpty
-          ? 0.0
-          : validPm25.map((e) => e.toDouble()).reduce((a, b) => a + b) / validPm25.length;
-      final avgPm10 = validPm10.isEmpty
-          ? 0.0
-          : validPm10.map((e) => e.toDouble()).reduce((a, b) => a + b) / validPm10.length;
+      final avgPm25 = validPm25.isEmpty ? 0.0 : validPm25.map((e) => e.toDouble()).reduce((a, b) => a + b) / validPm25.length;
+      final avgPm10 = validPm10.isEmpty ? 0.0 : validPm10.map((e) => e.toDouble()).reduce((a, b) => a + b) / validPm10.length;
 
       return WeatherData(
         hourly: hourlyList,

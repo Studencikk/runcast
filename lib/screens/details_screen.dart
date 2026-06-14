@@ -25,38 +25,30 @@ class DetailsScreen extends StatelessWidget {
 
     final avgTemp = hours.map((h) => h.temperature).reduce((a, b) => a + b) / hours.length;
     final avgWind = hours.map((h) => h.windSpeed).reduce((a, b) => a + b) / hours.length;
-    final avgRain = hours.map((h) => h.precipitationProbability).reduce((a, b) => a + b) / hours.length;
+    final avgPrecip = hours.map((h) => h.precipitation).reduce((a, b) => a + b) / hours.length;
 
-    if (avgRain >= 60) {
-      return 'Kurtka przeciwdeszczowa + długie spodnie';
-    }
-    if (avgTemp < 5) {
-      return 'Spodnie termiczne + kurtka biegowa + rękawiczki + czapka';
-    }
+    if (avgTemp < 5) return 'Spodnie termiczne + kurtka biegowa + rękawiczki + czapka';
     if (avgTemp < 10) {
+      if (avgPrecip >= 0.5) return 'Kurtka przeciwdeszczowa + długie spodnie + bluza';
       return 'Długie spodnie + bluza z kapturem';
     }
     if (avgTemp < 15) {
-      if (avgWind >= 20) {
-        return 'Długie spodnie + koszulka z długim rękawem + wiatrówka';
-      }
+      if (avgPrecip >= 0.5) return 'Kurtka przeciwdeszczowa + długie spodnie';
+      if (avgWind >= 20) return 'Długie spodnie + koszulka z długim rękawem + wiatrówka';
       return 'Długie spodnie + koszulka z długim rękawem';
     }
     if (avgTemp < 20) {
-      if (avgWind >= 20) {
-        return 'Krótkie spodenki + koszulka z długim rękawem + wiatrówka';
-      }
+      if (avgPrecip >= 0.5) return 'Kurtka przeciwdeszczowa + krótkie spodenki';
+      if (avgWind >= 20) return 'Krótkie spodenki + koszulka z długim rękawem + wiatrówka';
       return 'Krótkie spodenki + koszulka z długim rękawem';
     }
     if (avgTemp < 25) {
-      if (avgWind >= 20) {
-        return 'Krótkie spodenki + koszulka z krótkim rękawem + wiatrówka';
-      }
+      if (avgPrecip >= 0.5) return 'Kurtka przeciwdeszczowa + krótkie spodenki';
+      if (avgWind >= 20) return 'Krótkie spodenki + koszulka z krótkim rękawem + wiatrówka';
       return 'Krótkie spodenki + koszulka z krótkim rękawem';
     }
-    if (avgWind >= 25) {
-      return 'Krótkie spodenki + koszulka z krótkim rękawem + wiatrówka';
-    }
+    if (avgPrecip >= 0.5) return 'Kurtka przeciwdeszczowa + krótkie spodenki';
+    if (avgWind >= 25) return 'Krótkie spodenki + koszulka z krótkim rękawem + wiatrówka';
     return 'Krótkie spodenki + koszulka z krótkim rękawem + czapka z daszkiem';
   }
 
@@ -78,12 +70,11 @@ class DetailsScreen extends StatelessWidget {
     final airLabel = weatherData.airQuality.label;
     final airColor = _airQualityColor(airLabel);
 
-    double avgWind = 0;
-    double avgTemp = 0;
-    if (hours.isNotEmpty) {
-      avgWind = hours.map((h) => h.windSpeed).reduce((a, b) => a + b) / hours.length;
-      avgTemp = hours.map((h) => h.temperature).reduce((a, b) => a + b) / hours.length;
-    }
+    final currentHour = weatherData.getCurrentHour();
+    final currentWind = currentHour?.windSpeed ?? 0;
+    final currentTemp = currentHour?.temperature ?? 15;
+    final currentRainLabel = currentHour?.rainLabel ?? 'Brak';
+    final now = DateTime.now().hour;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F0F),
@@ -100,9 +91,9 @@ class DetailsScreen extends StatelessWidget {
             Text(
               '$windowName ${_formatHour(startHour)}:00–${_formatHour(endHour)}:00',
               style: const TextStyle(
-                color: Colors.white,
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
               ),
             ),
             const Text(
@@ -115,21 +106,20 @@ class DetailsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // --- Prognoza godzinowa ---
           const Text(
-            'PROGNOZA GODZINOWA',
-            style: TextStyle(
-              color: Colors.white54,
-              fontSize: 12,
-              letterSpacing: 1.5,
-              fontWeight: FontWeight.w600,
-            ),
+              'PROGNOZA GODZINOWA',
+              style: TextStyle(
+                  color: Colors.white54,
+                  fontSize: 12,
+                  letterSpacing: 1.5,
+                  fontWeight: FontWeight.w600,
+              ),
           ),
           const SizedBox(height: 10),
           Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A),
-              borderRadius: BorderRadius.circular(16),
+                color: const Color(0xFF1A1A1A),
+                borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
               children: [
@@ -137,10 +127,7 @@ class DetailsScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   child: Row(
                     children: const [
-                      SizedBox(
-                        width: 50,
-                        child: Text('GODZ.', style: TextStyle(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.w600)),
-                      ),
+                      SizedBox(width: 50, child: Text('GODZ.', style: TextStyle(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.w600))),
                       Expanded(child: Text('TEMP', style: TextStyle(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.w600))),
                       Expanded(child: Text('WIATR', style: TextStyle(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.w600))),
                       Expanded(child: Text('OPADY', style: TextStyle(color: Colors.white38, fontSize: 11, fontWeight: FontWeight.w600))),
@@ -159,30 +146,42 @@ class DetailsScreen extends StatelessWidget {
                         SizedBox(
                           width: 50,
                           child: Text(
-                            '${_formatHour(h.hour)}:00',
-                            style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500),
+                              '${_formatHour(h.hour)}:00',
+                              style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500),
                           ),
                         ),
                         Expanded(
-                          child: Row(children: [
-                            const Icon(Icons.thermostat, color: Color(0xFFEF5350), size: 14),
-                            const SizedBox(width: 4),
-                            Text('${h.temperature.toStringAsFixed(0)}°C', style: const TextStyle(color: Colors.white, fontSize: 14)),
-                          ]),
+                            child: Row(children: [
+                              const Icon(Icons.thermostat, color: Color(0xFFEF5350), size: 14),
+                              const SizedBox(width: 4),
+                              Text('${h.temperature.toStringAsFixed(0)}°C', style: const TextStyle(color: Colors.white, fontSize: 14)),
+                        ]),
                         ),
                         Expanded(
-                          child: Row(children: [
-                            const Icon(Icons.air, color: Color(0xFF90CAF9), size: 14),
-                            const SizedBox(width: 4),
-                            Text('${h.windSpeed.toStringAsFixed(0)} km/h', style: const TextStyle(color: Colors.white, fontSize: 14)),
-                          ]),
+                            child: Row(children: [
+                              const Icon(Icons.air, color: Color(0xFF90CAF9), size: 14),
+                              const SizedBox(width: 4),
+                              Text('${h.windSpeed.toStringAsFixed(0)} km/h', style: const TextStyle(color: Colors.white, fontSize: 14)),
+                        ]),
                         ),
                         Expanded(
-                          child: Row(children: [
-                            const Icon(Icons.water_drop, color: Color(0xFF7986CB), size: 14),
-                            const SizedBox(width: 4),
-                            Text('${h.precipitationProbability}%', style: const TextStyle(color: Colors.white, fontSize: 14)),
-                          ]),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                h.rainLabel,
+                                style: TextStyle(
+                                  color: h.isRaining ? Colors.white : Colors.white38,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              if (h.isRaining)
+                                Text(
+                                  '${h.precipitationProbability}% szansy',
+                                  style: const TextStyle(color: Colors.white38, fontSize: 11),
+                                ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -194,12 +193,11 @@ class DetailsScreen extends StatelessWidget {
 
           const SizedBox(height: 20),
 
-          // --- Jakość powietrza ---
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A),
-              borderRadius: BorderRadius.circular(16),
+                color: const Color(0xFF1A1A1A),
+                borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
               children: [
@@ -209,12 +207,12 @@ class DetailsScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Jakość Powietrza',
-                      style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                        'Jakość Powietrza',
+                        style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      'PM2.5: ${weatherData.airQuality.pm25.toStringAsFixed(1)} µg/m³',
-                      style: const TextStyle(color: Colors.white54, fontSize: 13),
+                        'PM2.5: ${weatherData.airQuality.pm25.toStringAsFixed(1)} µg/m³',
+                        style: const TextStyle(color: Colors.white54, fontSize: 13),
                     ),
                   ],
                 ),
@@ -227,13 +225,13 @@ class DetailsScreen extends StatelessWidget {
                     border: Border.all(color: airColor.withValues(alpha: 0.5)),
                   ),
                   child: Text(
-                    airLabel.toUpperCase(),
-                    style: TextStyle(
-                      color: airColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
-                    ),
+                      airLabel.toUpperCase(),
+                      style: TextStyle(
+                          color: airColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                      ),
                   ),
                 ),
               ],
@@ -242,7 +240,6 @@ class DetailsScreen extends StatelessWidget {
 
           const SizedBox(height: 20),
 
-          // --- Rekomendacja ubioru ---
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -254,13 +251,13 @@ class DetailsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'REKOMENDACJA',
-                  style: TextStyle(
-                    color: Color(0xFF00E676),
-                    fontSize: 11,
-                    letterSpacing: 1.5,
-                    fontWeight: FontWeight.w600,
-                  ),
+                    'REKOMENDACJA',
+                    style: TextStyle(
+                        color: Color(0xFF00E676),
+                        fontSize: 11,
+                        letterSpacing: 1.5,
+                        fontWeight: FontWeight.w600,
+                    ),
                 ),
                 const SizedBox(height: 10),
                 const Row(
@@ -268,15 +265,15 @@ class DetailsScreen extends StatelessWidget {
                     Icon(Icons.checkroom, color: Colors.white70, size: 20),
                     SizedBox(width: 8),
                     Text(
-                      'Jak się ubrać?',
-                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        'Jak się ubrać?',
+                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  outfitAdvice,
-                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                    outfitAdvice,
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
                 ),
               ],
             ),
@@ -284,7 +281,6 @@ class DetailsScreen extends StatelessWidget {
 
           const SizedBox(height: 28),
 
-          // --- Przycisk przejścia do tras ---
           ElevatedButton(
             onPressed: () async {
               await FirebaseAnalytics.instance.logEvent(name: 'route_selected');
@@ -293,8 +289,11 @@ class DetailsScreen extends StatelessWidget {
                   context,
                   PageRouteBuilder(
                     pageBuilder: (context, animation, secondaryAnimation) => RoutesScreen(
-                      avgWindSpeed: avgWind,
-                      avgTemperature: avgTemp,
+                      currentWindSpeed: currentWind,
+                      currentTemperature: currentTemp,
+                      currentRainLabel: currentRainLabel,
+                      currentHourLabel: now,
+                      fromDetails: true,
                     ),
                     transitionsBuilder: (context, animation, secondaryAnimation, child) {
                       return SlideTransition(
@@ -316,8 +315,8 @@ class DetailsScreen extends StatelessWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             ),
             child: const Text(
-              'Wybierz trasę pod te warunki',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                'Wybierz trasę pod aktualne warunki',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
 

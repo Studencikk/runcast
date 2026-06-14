@@ -3,6 +3,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import '../services/weather_service.dart';
 import 'details_screen.dart';
 
+// Ekran główny
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -54,17 +55,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   TextSpan(
                     text: 'Run',
                     style: TextStyle(
-                      color: Color(0xFF00E676),
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                        color: Color(0xFF00E676),
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                     ),
                   ),
                   TextSpan(
                     text: 'Cast',
                     style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
@@ -85,8 +86,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 Icon(Icons.location_on, color: Color(0xFF00E676), size: 14),
                 SizedBox(width: 4),
                 Text(
-                  'Kraków',
-                  style: TextStyle(color: Colors.white70, fontSize: 13),
+                    'Kraków',
+                    style: TextStyle(color: Colors.white70, fontSize: 13),
                 ),
               ],
             ),
@@ -98,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFF00E676)),
+                child: CircularProgressIndicator(color: Color(0xFF00E676)),
             );
           }
 
@@ -129,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         backgroundColor: const Color(0xFF00E676),
                         foregroundColor: Colors.black,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       child: const Text('Spróbuj ponownie'),
@@ -152,9 +153,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Text(
                   'Kiedy rozpocząć bieg?',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -204,12 +205,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _navigateToDetails(
-    BuildContext context,
-    String windowName,
-    int startHour,
-    int endHour,
-    WeatherData data,
-  ) {
+      BuildContext context,
+      String windowName,
+      int startHour,
+      int endHour,
+      WeatherData data,
+      ) {
     Navigator.push(
       context,
       PageRouteBuilder(
@@ -267,12 +268,8 @@ class _TrainingWindowCard extends StatelessWidget {
   }
 
   Widget _comfortIcon(int score) {
-    if (score >= 80) {
-      return const Icon(Icons.thumb_up, color: Color(0xFF00E676), size: 20);
-    }
-    if (score >= 60) {
-      return const Icon(Icons.warning_amber, color: Color(0xFFFFB300), size: 20);
-    }
+    if (score >= 80) return const Icon(Icons.thumb_up, color: Color(0xFF00E676), size: 20);
+    if (score >= 60) return const Icon(Icons.warning_amber, color: Color(0xFFFFB300), size: 20);
     return const Icon(Icons.warning, color: Color(0xFFEF5350), size: 20);
   }
 
@@ -280,20 +277,16 @@ class _TrainingWindowCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final score = data.calculateComfort(startHour, endHour);
     final hours = data.getWindowHours(startHour, endHour);
+    final comfortColor = _comfortColor(score);
+    final descLabel = data.comfortLabel(score);
 
     double avgTemp = 0;
+    double avgWind = 0;
+    double avgPrecip = 0;
     if (hours.isNotEmpty) {
       avgTemp = hours.map((h) => h.temperature).reduce((a, b) => a + b) / hours.length;
-    }
-
-    final Color comfortColor = _comfortColor(score);
-    final String descLabel = data.comfortLabel(score);
-
-    String subtitleText = '${avgTemp.toStringAsFixed(0)}°C śr.';
-    final hours20 = hours.where((h) => h.windSpeed >= 20).toList();
-    if (hours20.isNotEmpty) {
-      final avgWind = hours.map((h) => h.windSpeed).reduce((a, b) => a + b) / hours.length;
-      subtitleText = 'Silny wiatr ${avgWind.toStringAsFixed(0)} km/h';
+      avgWind = hours.map((h) => h.windSpeed).reduce((a, b) => a + b) / hours.length;
+      avgPrecip = hours.map((h) => h.precipitation).reduce((a, b) => a + b) / hours.length;
     }
 
     return GestureDetector(
@@ -304,8 +297,8 @@ class _TrainingWindowCard extends StatelessWidget {
           color: const Color(0xFF1A1A1A),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: comfortColor.withValues(alpha: 0.25),
-            width: 1,
+              color: comfortColor.withValues(alpha: 0.25),
+              width: 1,
           ),
         ),
         child: Column(
@@ -319,21 +312,21 @@ class _TrainingWindowCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      label,
-                      style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 12,
-                        letterSpacing: 1.5,
-                        fontWeight: FontWeight.w600,
-                      ),
+                        label,
+                        style: const TextStyle(
+                            color: Colors.white54,
+                            fontSize: 12,
+                            letterSpacing: 1.5,
+                            fontWeight: FontWeight.w600,
+                        ),
                     ),
                     Text(
-                      timeRange,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                        timeRange,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                        ),
                     ),
                   ],
                 ),
@@ -342,12 +335,12 @@ class _TrainingWindowCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '$score%',
-                      style: TextStyle(
-                        color: comfortColor,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                      ),
+                        '$score%',
+                        style: TextStyle(
+                            color: comfortColor,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                        ),
                     ),
                     _comfortIcon(score),
                   ],
@@ -361,8 +354,8 @@ class _TrainingWindowCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  descLabel,
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                    descLabel,
+                    style: const TextStyle(color: Colors.white70, fontSize: 13),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -374,18 +367,33 @@ class _TrainingWindowCard extends StatelessWidget {
                   child: Text(
                     _comfortBadge(score),
                     style: TextStyle(
-                      color: comfortColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                        color: comfortColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 6),
-            Text(
-              subtitleText,
-              style: const TextStyle(color: Colors.white38, fontSize: 12),
+            const SizedBox(height: 10),
+            // Statystyki: temp, wiatr, opady
+            Row(
+              children: [
+                const Icon(Icons.thermostat, color: Color(0xFFEF5350), size: 13),
+                const SizedBox(width: 3),
+                Text('${avgTemp.toStringAsFixed(0)}°C', style: const TextStyle(color: Colors.white38, fontSize: 12)),
+                const SizedBox(width: 12),
+                const Icon(Icons.air, color: Color(0xFF90CAF9), size: 13),
+                const SizedBox(width: 3),
+                Text('${avgWind.toStringAsFixed(0)} km/h', style: const TextStyle(color: Colors.white38, fontSize: 12)),
+                const SizedBox(width: 12),
+                const Icon(Icons.water_drop, color: Color(0xFF7986CB), size: 13),
+                const SizedBox(width: 3),
+                Text(
+                  avgPrecip < 0.5 ? 'Bez opadów' : '${avgPrecip.toStringAsFixed(1)} mm',
+                  style: const TextStyle(color: Colors.white38, fontSize: 12),
+                ),
+              ],
             ),
           ],
         ),
