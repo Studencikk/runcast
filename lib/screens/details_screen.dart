@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:hive/hive.dart';
 import '../services/weather_service.dart';
 import 'routes_screen.dart';
 
@@ -284,6 +285,12 @@ class DetailsScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () async {
               await FirebaseAnalytics.instance.logEvent(name: 'route_selected');
+              final profileBox = Hive.box('profile');
+              final counts = Map<String, int>.from(
+                profileBox.get('windowCounts', defaultValue: <String, int>{}),
+              );
+              counts[windowName] = (counts[windowName] ?? 0) + 1;
+              await profileBox.put('windowCounts', counts);
               if (context.mounted) {
                 Navigator.push(
                   context,
